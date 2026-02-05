@@ -3,19 +3,12 @@ import mongoose from "mongoose";
 export const connectDB = async () => {
   try {
     const mongoUrl = process.env.MONGO_URL;
-    
-    if (!mongoUrl) {
-      console.warn("⚠️ MONGO_URL is not defined - skipping MongoDB connection");
-      return;
-    }
+    if (!mongoUrl) throw new Error("MONGO_URL is not defined");
 
     await mongoose.connect(mongoUrl);
-    console.log("✅ Connected to MongoDB");
+    console.log("Connected to MongoDB");
   } catch (error) {
-    console.error("❌ Error connecting to MongoDB:", error.message);
-    // Don't exit on production, just warn
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
+    console.error("Error connecting to MongoDB:", error);
+    process.exit(1);
   }
 }

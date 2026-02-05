@@ -9,12 +9,7 @@ import { connectDB } from "./config/db.js";
 import { helpers } from "./views/helpers/hbs-helpers.js";
 
 const app = express();
-
-// Load environment variables safely
-if (process.env.NODE_ENV !== 'production') {
-  dotenv.config();
-}
-
+dotenv.config();
 connectDB();
 
 // Cấu hình Handlebars
