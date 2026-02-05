@@ -20,17 +20,42 @@ export async function getUsers(req, res) {
     const users = await userService.getUsers(filter);
     const usersForView = normalizeUsersForView(users);
 
-    res.render("users/list", {
-      title: "Quản lý Người dùng",
-      users: usersForView,
-      query: req.query || {}
-    });
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.json({
+        success: true,
+        data: usersForView,
+        count: usersForView.length
+      });
+    }
+
+    if (res.render) {
+      return res.render("users/list", {
+        title: "Quản lý Người dùng",
+        users: usersForView,
+        query: req.query || {}
+      });
+    }
+
+    res.json({ success: true, data: usersForView, count: usersForView.length });
   } catch (err) {
     console.error("Error in getUsers:", err);
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
 
@@ -40,25 +65,60 @@ export async function getUserById(req, res) {
     const user = await userService.getUserById(id);
 
     if (!user) {
-      return res.status(404).render("error", {
-        title: "Không tìm thấy",
-        message: "Không tìm thấy người dùng"
-      });
+      if (req.accepts('json') && !req.accepts('html')) {
+        return res.status(404).json({
+          success: false,
+          error: "Không tìm thấy người dùng",
+          status: 404
+        });
+      }
+      if (res.render) {
+        return res.status(404).render("error", {
+          title: "Không tìm thấy",
+          message: "Không tìm thấy người dùng"
+        });
+      }
+      return res.status(404).json({ success: false, error: "Không tìm thấy người dùng", status: 404 });
     }
 
     const userForView = user
       ? { ...user, _id: user._id?.toString?.() ?? user._id }
       : null;
 
-    res.render("users/detail", {
-      title: "Chi tiết Người dùng",
-      user: userForView
-    });
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.json({
+        success: true,
+        data: userForView
+      });
+    }
+
+    if (res.render) {
+      return res.render("users/detail", {
+        title: "Chi tiết Người dùng",
+        user: userForView
+      });
+    }
+
+    res.json({ success: true, data: userForView });
   } catch (err) {
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+    console.error("Error in getUserById:", err);
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
 
@@ -67,26 +127,63 @@ export async function createUser(req, res) {
     const { name, email, phone, role } = req.body;
 
     if (!name || !email || !phone) {
-      return res.status(400).render("error", {
-        title: "Lỗi",
-        message: "Name, email and phone are required"
+      return res.status(400).json({
+        success: false,
+        error: "Name, email and phone are required",
+        status: 400
       });
     }
 
-    await userService.createUser(name, email, phone, role);
-    res.redirect("/users");
-  } catch (err) {
-    if (err.code === 11000) {
-      const field = Object.keys(err.keyPattern)[0];
-      return res.status(400).render("error", {
-        title: "Lỗi",
-        message: `${field} already exists`
+    const newUser = await userService.createUser(name, email, phone, role);
+
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(201).json({
+        success: true,
+        data: newUser,
+        message: "User created successfully"
       });
     }
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+
+    res.redirect("/users");
+  } catch (err) {
+    console.error("Error in createUser:", err);
+    
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern)[0];
+      const errorMsg = `${field} already exists`;
+      
+      if (req.accepts('json') && !req.accepts('html')) {
+        return res.status(400).json({
+          success: false,
+          error: errorMsg,
+          status: 400
+        });
+      }
+      if (res.render) {
+        return res.status(400).render("error", {
+          title: "Lỗi",
+          message: errorMsg
+        });
+      }
+      return res.status(400).json({ success: false, error: errorMsg, status: 400 });
+    }
+
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
 
@@ -98,25 +195,70 @@ export async function updateUser(req, res) {
     const updatedUser = await userService.updateUser(id, updateData);
 
     if (!updatedUser) {
-      return res.status(404).render("error", {
-        title: "Không tìm thấy",
-        message: "Không tìm thấy người dùng"
+      if (req.accepts('json') && !req.accepts('html')) {
+        return res.status(404).json({
+          success: false,
+          error: "Không tìm thấy người dùng",
+          status: 404
+        });
+      }
+      if (res.render) {
+        return res.status(404).render("error", {
+          title: "Không tìm thấy",
+          message: "Không tìm thấy người dùng"
+        });
+      }
+      return res.status(404).json({ success: false, error: "Không tìm thấy người dùng", status: 404 });
+    }
+
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.json({
+        success: true,
+        data: updatedUser,
+        message: "User updated successfully"
       });
     }
 
     res.redirect(`/users/${id}`);
   } catch (err) {
+    console.error("Error in updateUser:", err);
+    
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern)[0];
-      return res.status(400).render("error", {
-        title: "Lỗi",
-        message: `${field} already exists`
+      const errorMsg = `${field} already exists`;
+      
+      if (req.accepts('json') && !req.accepts('html')) {
+        return res.status(400).json({
+          success: false,
+          error: errorMsg,
+          status: 400
+        });
+      }
+      if (res.render) {
+        return res.status(400).render("error", {
+          title: "Lỗi",
+          message: errorMsg
+        });
+      }
+      return res.status(400).json({ success: false, error: errorMsg, status: 400 });
+    }
+
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
       });
     }
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
 
@@ -126,17 +268,48 @@ export async function deleteUser(req, res) {
     const deletedUser = await userService.deleteUser(id);
 
     if (!deletedUser) {
-      return res.status(404).render("error", {
-        title: "Không tìm thấy",
-        message: "Không tìm thấy người dùng"
+      if (req.accepts('json') && !req.accepts('html')) {
+        return res.status(404).json({
+          success: false,
+          error: "Không tìm thấy người dùng",
+          status: 404
+        });
+      }
+      if (res.render) {
+        return res.status(404).render("error", {
+          title: "Không tìm thấy",
+          message: "Không tìm thấy người dùng"
+        });
+      }
+      return res.status(404).json({ success: false, error: "Không tìm thấy người dùng", status: 404 });
+    }
+
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.json({
+        success: true,
+        message: "User deleted successfully"
       });
     }
 
     res.redirect("/users");
   } catch (err) {
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+    console.error("Error in deleteUser:", err);
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
