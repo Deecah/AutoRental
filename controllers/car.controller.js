@@ -33,17 +33,44 @@ export async function getCars(req, res) {
 
     const carsForView = normalizeCarsForView(cars);
 
-    res.render("cars/list", {
-      title: "Quản lý Xe",
-      cars: carsForView,
-      query: req.query || {}
-    });
+    // Return JSON for API requests, render HTML for browser requests
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.json({
+        success: true,
+        data: carsForView,
+        count: carsForView.length
+      });
+    }
+
+    // Try to render if available (development), otherwise return JSON
+    if (res.render) {
+      return res.render("cars/list", {
+        title: "Quản lý Xe",
+        cars: carsForView,
+        query: req.query || {}
+      });
+    }
+
+    res.json({ success: true, data: carsForView, count: carsForView.length });
   } catch (err) {
     console.error("Error in getCars:", err);
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
 
@@ -53,10 +80,20 @@ export async function getCarById(req, res) {
     const car = await carService.getCarById(id);
 
     if (!car) {
-      return res.status(404).render("error", {
-        title: "Không tìm thấy",
-        message: "Không tìm thấy xe"
-      });
+      if (req.accepts('json') && !req.accepts('html')) {
+        return res.status(404).json({
+          success: false,
+          error: "Không tìm thấy xe",
+          status: 404
+        });
+      }
+      if (res.render) {
+        return res.status(404).render("error", {
+          title: "Không tìm thấy",
+          message: "Không tìm thấy xe"
+        });
+      }
+      return res.status(404).json({ success: false, error: "Không tìm thấy xe", status: 404 });
     }
 
     const carForView = normalizeCarsForView([car])[0] || {
@@ -67,28 +104,86 @@ export async function getCarById(req, res) {
         : null
     };
 
-    res.render("cars/detail", {
-      title: "Chi tiết Xe",
-      car: carForView
-    });
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.json({
+        success: true,
+        data: carForView
+      });
+    }
+
+    if (res.render) {
+      return res.render("cars/detail", {
+        title: "Chi tiết Xe",
+        car: carForView
+      });
+    }
+
+    res.json({ success: true, data: carForView });
   } catch (err) {
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+    console.error("Error in getCarById:", err);
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
 
 export async function createCar(req, res) {
   try {
     const { name, ownerId, pricePerDay, status } = req.body;
-    await carService.createCar(name, ownerId, pricePerDay, status);
+    
+    if (!name || !pricePerDay) {
+      return res.status(400).json({
+        success: false,
+        error: "Name and price are required",
+        status: 400
+      });
+    }
+
+    const newCar = await carService.createCar(name, ownerId, pricePerDay, status);
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(201).json({
+        success: true,
+        data: newCar,
+        message: "Car created successfully"
+      });
+    }
+
+    // Redirect for browser requests
     res.redirect("/cars");
   } catch (err) {
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+    console.error("Error in createCar:", err);
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }
 
@@ -98,16 +193,41 @@ export async function searchCars(req, res) {
     const cars = await carService.searchCars(name, status, minPrice, maxPrice);
     const carsForView = normalizeCarsForView(cars);
 
-    res.render("cars/list", {
-      title: "Tìm kiếm Xe",
-      cars: carsForView,
-      query: req.query || {}
-    });
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.json({
+        success: true,
+        data: carsForView,
+        count: carsForView.length
+      });
+    }
+
+    if (res.render) {
+      return res.render("cars/list", {
+        title: "Tìm kiếm Xe",
+        cars: carsForView,
+        query: req.query || {}
+      });
+    }
+
+    res.json({ success: true, data: carsForView, count: carsForView.length });
   } catch (err) {
     console.error("Error in searchCars:", err);
-    res.status(500).render("error", {
-      title: "Lỗi",
-      message: err.message
-    });
+    
+    if (req.accepts('json') && !req.accepts('html')) {
+      return res.status(500).json({
+        success: false,
+        error: err.message,
+        status: 500
+      });
+    }
+
+    if (res.render) {
+      return res.status(500).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+
+    res.status(500).json({ success: false, error: err.message, status: 500 });
   }
 }

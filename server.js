@@ -33,15 +33,39 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-// Routes
-app.get("/", (req, res) => {
-  res.render("home", { title: "Trang chủ" });
+// Health check endpoint
+app.get("/health", (req, res) => {
+  res.json({ status: "ok", message: "Server is running" });
 });
 
+// Home endpoint (API response instead of rendering)
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "Car Rental API",
+    endpoints: {
+      health: "/health",
+      cars: "/cars",
+      bookings: "/bookings",
+      users: "/users",
+      contracts: "/contracts"
+    }
+  });
+});
+
+// API Routes
 app.use("/cars", carRoutes);
 app.use("/bookings", bookingRoutes);
 app.use("/users", userRoutes);
 app.use("/contracts", contractRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("❌ Error:", err);
+  res.status(err.status || 500).json({
+    error: err.message || "Internal Server Error",
+    status: err.status || 500
+  });
+});
 
 // Vercel serverless handler
 export default app;
