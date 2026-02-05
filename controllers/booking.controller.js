@@ -22,42 +22,17 @@ export async function getBookings(req, res) {
     const bookings = await bookingService.getBookings(filter);
     const bookingsForView = normalizeBookingsForView(bookings);
 
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.json({
-        success: true,
-        data: bookingsForView,
-        count: bookingsForView.length
-      });
-    }
-
-    if (res.render) {
-      return res.render("bookings/list", {
-        title: "Quản lý Đặt xe",
-        bookings: bookingsForView,
-        query: req.query || {}
-      });
-    }
-
-    res.json({ success: true, data: bookingsForView, count: bookingsForView.length });
+    res.render("bookings/list", {
+      title: "Quản lý Đặt xe",
+      bookings: bookingsForView,
+      query: req.query || {}
+    });
   } catch (err) {
     console.error("Error in getBookings:", err);
-    
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-        status: 500
-      });
-    }
-
-    if (res.render) {
-      return res.status(500).render("error", {
-        title: "Lỗi",
-        message: err.message
-      });
-    }
-
-    res.status(500).json({ success: false, error: err.message, status: 500 });
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }
 
@@ -67,22 +42,11 @@ export async function getBookingById(req, res) {
 
     const booking = await bookingService.getBookingById(bookingId);
     if (!booking) {
-      if (req.accepts('json') && !req.accepts('html')) {
-        return res.status(404).json({
-          success: false,
-          error: "Không tìm thấy đặt xe",
-          status: 404
-        });
-      }
-      if (res.render) {
-        return res.status(404).render("error", {
-          title: "Không tìm thấy",
-          message: "Không tìm thấy đặt xe"
-        });
-      }
-      return res.status(404).json({ success: false, error: "Không tìm thấy đặt xe", status: 404 });
+      return res.status(404).render("error", {
+        title: "Không tìm thấy",
+        message: "Không tìm thấy đặt xe"
+      });
     }
-
     const bookingForView = booking
       ? {
           ...booking,
@@ -96,40 +60,15 @@ export async function getBookingById(req, res) {
         }
       : null;
 
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.json({
-        success: true,
-        data: bookingForView
-      });
-    }
-
-    if (res.render) {
-      return res.render("bookings/detail", {
-        title: "Chi tiết Đặt xe",
-        booking: bookingForView
-      });
-    }
-
-    res.json({ success: true, data: bookingForView });
+    res.render("bookings/detail", {
+      title: "Chi tiết Đặt xe",
+      booking: bookingForView
+    });
   } catch (err) {
-    console.error("Error in getBookingById:", err);
-    
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-        status: 500
-      });
-    }
-
-    if (res.render) {
-      return res.status(500).render("error", {
-        title: "Lỗi",
-        message: err.message
-      });
-    }
-
-    res.status(500).json({ success: false, error: err.message, status: 500 });
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }
 
@@ -137,46 +76,26 @@ export async function createBooking(req, res) {
   try {
     const { userId, carId, startDate, endDate } = req.body;
 
-    if (!userId || !carId || !startDate || !endDate) {
-      return res.status(400).json({
-        success: false,
-        error: "userId, carId, startDate, and endDate are required",
-        status: 400
-      });
-    }
-
     const result = await bookingService.createBooking(userId, carId, startDate, endDate);
-
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(201).json({
-        success: true,
-        data: result,
-        message: "Booking created successfully"
-      });
-    }
 
     res.redirect("/bookings");
   } catch (err) {
-    console.error("Error in createBooking:", err);
-    const statusCode = err.message === "Car not found" ? 404 : 
-                       err.message === "Car is already booked" ? 400 : 500;
-
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(statusCode).json({
-        success: false,
-        error: err.message,
-        status: statusCode
-      });
-    }
-
-    if (res.render) {
-      return res.status(statusCode).render("error", {
+    if (err.message === "Car not found") {
+      return res.status(404).render("error", {
         title: "Lỗi",
         message: err.message
       });
     }
-
-    res.status(statusCode).json({ success: false, error: err.message, status: statusCode });
+    if (err.message === "Car is already booked") {
+      return res.status(400).render("error", {
+        title: "Lỗi",
+        message: err.message
+      });
+    }
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }
 
@@ -186,42 +105,16 @@ export async function viewBooked(req, res) {
     const bookings = await bookingService.viewBooked(userId);
     const bookingsForView = normalizeBookingsForView(bookings);
 
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.json({
-        success: true,
-        data: bookingsForView,
-        count: bookingsForView.length
-      });
-    }
-
-    if (res.render) {
-      return res.render("bookings/list", {
-        title: "Đặt xe của Người dùng",
-        bookings: bookingsForView,
-        query: req.query || {}
-      });
-    }
-
-    res.json({ success: true, data: bookingsForView, count: bookingsForView.length });
+    res.render("bookings/list", {
+      title: "Đặt xe của Người dùng",
+      bookings: bookingsForView,
+      query: req.query || {}
+    });
   } catch (err) {
-    console.error("Error in viewBooked:", err);
-    
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-        status: 500
-      });
-    }
-
-    if (res.render) {
-      return res.status(500).render("error", {
-        title: "Lỗi",
-        message: err.message
-      });
-    }
-
-    res.status(500).json({ success: false, error: err.message, status: 500 });
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }
 
@@ -231,41 +124,15 @@ export async function getOwnerCarBookings(req, res) {
     const bookings = await bookingService.getOwnerCarBookings(ownerId);
     const bookingsForView = normalizeBookingsForView(bookings);
 
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.json({
-        success: true,
-        data: bookingsForView,
-        count: bookingsForView.length
-      });
-    }
-
-    if (res.render) {
-      return res.render("bookings/list", {
-        title: "Đặt xe của Chủ xe",
-        bookings: bookingsForView,
-        query: req.query || {}
-      });
-    }
-
-    res.json({ success: true, data: bookingsForView, count: bookingsForView.length });
+    res.render("bookings/list", {
+      title: "Đặt xe của Chủ xe",
+      bookings: bookingsForView,
+      query: req.query || {}
+    });
   } catch (err) {
-    console.error("Error in getOwnerCarBookings:", err);
-    
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-        status: 500
-      });
-    }
-
-    if (res.render) {
-      return res.status(500).render("error", {
-        title: "Lỗi",
-        message: err.message
-      });
-    }
-
-    res.status(500).json({ success: false, error: err.message, status: 500 });
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }

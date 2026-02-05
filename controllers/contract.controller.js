@@ -36,42 +36,17 @@ export async function getContracts(req, res) {
     const contracts = await contractService.getContracts(filter);
     const contractsForView = normalizeContractsForView(contracts);
 
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.json({
-        success: true,
-        data: contractsForView,
-        count: contractsForView.length
-      });
-    }
-
-    if (res.render) {
-      return res.render("contracts/list", {
-        title: "Quản lý Hợp đồng",
-        contracts: contractsForView,
-        query: req.query || {}
-      });
-    }
-
-    res.json({ success: true, data: contractsForView, count: contractsForView.length });
+    res.render("contracts/list", {
+      title: "Quản lý Hợp đồng",
+      contracts: contractsForView,
+      query: req.query || {}
+    });
   } catch (err) {
     console.error("Error in getContracts:", err);
-    
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-        status: 500
-      });
-    }
-
-    if (res.render) {
-      return res.status(500).render("error", {
-        title: "Lỗi",
-        message: err.message
-      });
-    }
-
-    res.status(500).json({ success: false, error: err.message, status: 500 });
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }
 
@@ -81,104 +56,37 @@ export async function getContractById(req, res) {
     const contract = await contractService.getContractById(id);
     
     if (!contract) {
-      if (req.accepts('json') && !req.accepts('html')) {
-        return res.status(404).json({
-          success: false,
-          error: "Không tìm thấy hợp đồng",
-          status: 404
-        });
-      }
-      if (res.render) {
-        return res.status(404).render("error", {
-          title: "Không tìm thấy",
-          message: "Không tìm thấy hợp đồng"
-        });
-      }
-      return res.status(404).json({ success: false, error: "Không tìm thấy hợp đồng", status: 404 });
+      return res.status(404).render("error", {
+        title: "Không tìm thấy",
+        message: "Không tìm thấy hợp đồng"
+      });
     }
 
     const contractForView = contract
       ? normalizeContractsForView([contract])[0] || contract
       : null;
 
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.json({
-        success: true,
-        data: contractForView
-      });
-    }
-
-    if (res.render) {
-      return res.render("contracts/detail", {
-        title: "Chi tiết Hợp đồng",
-        contract: contractForView
-      });
-    }
-
-    res.json({ success: true, data: contractForView });
+    res.render("contracts/detail", {
+      title: "Chi tiết Hợp đồng",
+      contract: contractForView
+    });
   } catch (err) {
-    console.error("Error in getContractById:", err);
-    
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-        status: 500
-      });
-    }
-
-    if (res.render) {
-      return res.status(500).render("error", {
-        title: "Lỗi",
-        message: err.message
-      });
-    }
-
-    res.status(500).json({ success: false, error: err.message, status: 500 });
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }
 
 export async function createContract(req, res) {
   try {
     const { bookingId, totalCost } = req.body;
-
-    if (!bookingId || !totalCost) {
-      return res.status(400).json({
-        success: false,
-        error: "bookingId and totalCost are required",
-        status: 400
-      });
-    }
-
-    const newContract = await contractService.createContract(bookingId, totalCost);
-
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(201).json({
-        success: true,
-        data: newContract,
-        message: "Contract created successfully"
-      });
-    }
-
+    await contractService.createContract(bookingId, totalCost);
     res.redirect("/contracts");
   } catch (err) {
-    console.error("Error in createContract:", err);
-    
-    if (req.accepts('json') && !req.accepts('html')) {
-      return res.status(500).json({
-        success: false,
-        error: err.message,
-        status: 500
-      });
-    }
-
-    if (res.render) {
-      return res.status(500).render("error", {
-        title: "Lỗi",
-        message: err.message
-      });
-    }
-
-    res.status(500).json({ success: false, error: err.message, status: 500 });
+    res.status(500).render("error", {
+      title: "Lỗi",
+      message: err.message
+    });
   }
 }
