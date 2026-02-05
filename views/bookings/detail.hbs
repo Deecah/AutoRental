@@ -1,0 +1,88 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-calendar-check"></i> Chi tiết Đặt xe
+                </h4>
+            </div>
+            <div class="card-body">
+                {{#if booking}}
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th width="40%">Người đặt:</th>
+                                <td>
+                                    <strong>{{booking.userId.name}}</strong><br>
+                                    <small class="text-muted">{{booking.userId.email}}</small>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Xe:</th>
+                                <td><strong>{{booking.carId.name}}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Ngày bắt đầu:</th>
+                                <td>{{formatDate booking.startDate}}</td>
+                            </tr>
+                            <tr>
+                                <th>Ngày kết thúc:</th>
+                                <td>{{formatDate booking.endDate}}</td>
+                            </tr>
+                            <tr>
+                                <th>Tổng chi phí:</th>
+                                <td><strong class="text-primary">{{formatCurrency booking.totalCost}} VNĐ</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Trạng thái:</th>
+                                <td>
+                                    {{#if (eq booking.status "pending")}}
+                                        <span class="badge bg-warning">Chờ xác nhận</span>
+                                    {{else if (eq booking.status "confirmed")}}
+                                        <span class="badge bg-success">Đã xác nhận</span>
+                                    {{else}}
+                                        <span class="badge bg-danger">Đã từ chối</span>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="/bookings" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                    {{#if (eq booking.status "pending")}}
+                    <button class="btn btn-success" onclick="confirmBooking('{{booking._id}}')">
+                        <i class="bi bi-check-circle"></i> Xác nhận
+                    </button>
+                    <button class="btn btn-danger" onclick="declineBooking('{{booking._id}}')">
+                        <i class="bi bi-x-circle"></i> Từ chối
+                    </button>
+                    {{/if}}
+                </div>
+                {{else}}
+                <div class="alert alert-danger">
+                    Không tìm thấy thông tin đặt xe.
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function confirmBooking(id) {
+    if (confirm('Bạn có chắc chắn muốn xác nhận đặt xe này?')) {
+        fetch(`/bookings/${id}/confirm`, { method: 'PUT' })
+            .then(() => window.location.href = '/bookings');
+    }
+}
+function declineBooking(id) {
+    if (confirm('Bạn có chắc chắn muốn từ chối đặt xe này?')) {
+        fetch(`/bookings/${id}/decline`, { method: 'PUT' })
+            .then(() => window.location.href = '/bookings');
+    }
+}
+</script>

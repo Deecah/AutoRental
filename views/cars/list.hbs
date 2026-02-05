@@ -1,0 +1,152 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-car-front"></i> Danh sách Xe
+                </h4>
+                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addCarModal">
+                    <i class="bi bi-plus-circle"></i> Thêm xe mới
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Form tìm kiếm -->
+                <form method="GET" action="/cars" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tên xe</label>
+                            <input type="text" class="form-control" name="name" placeholder="Nhập tên xe..." value="{{query.name}}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" name="status">
+                                <option value="">Tất cả</option>
+                                <option value="available" {{#if (eq query.status "available")}}selected{{/if}}>Có sẵn</option>
+                                <option value="booked" {{#if (eq query.status "booked")}}selected{{/if}}>Đã đặt</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Giá tối thiểu</label>
+                            <input type="number" class="form-control" name="minPrice" placeholder="0" value="{{query.minPrice}}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Giá tối đa</label>
+                            <input type="number" class="form-control" name="maxPrice" placeholder="0" value="{{query.maxPrice}}">
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Bảng danh sách xe -->
+                {{#if cars}}
+                {{#each cars}}
+                {{#if @first}}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Tên xe</th>
+                                <th>Chủ sở hữu</th>
+                                <th>Trạng thái</th>
+                                <th>Giá/ngày</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                {{/if}}
+                            <tr>
+                                <td>{{inc @index}}</td>
+                                <td><strong>{{this.name}}</strong></td>
+                                <td>{{#if this.ownerId}}{{this.ownerId.name}}{{else}}—{{/if}}</td>
+                                <td>
+                                    {{#if (eq this.status "available")}}
+                                        <span class="badge bg-success">Có sẵn</span>
+                                    {{else}}
+                                        <span class="badge bg-danger">Đã đặt</span>
+                                    {{/if}}
+                                </td>
+                                <td>{{formatCurrency this.pricePerDay}} VNĐ</td>
+                                <td>
+                                    <a href="/cars/{{this._id}}" class="btn btn-sm btn-info" title="Xem">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                {{#if @last}}
+                        </tbody>
+                    </table>
+                </div>
+                {{/if}}
+                {{else}}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> Không có xe nào được tìm thấy.
+                </div>
+                {{/each}}
+                {{else}}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> Không có xe nào được tìm thấy.
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm xe -->
+<div class="modal fade" id="addCarModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Thêm xe mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/cars">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Tên xe *</label>
+                        <input type="text" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Chủ sở hữu (ID) *</label>
+                        <input type="text" class="form-control" name="ownerId" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Giá/ngày (VNĐ) *</label>
+                        <input type="number" class="form-control" name="pricePerDay" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select class="form-select" name="status">
+                            <option value="available">Có sẵn</option>
+                            <option value="booked">Đã đặt</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Thêm xe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewCar(id) {
+    window.location.href = `/cars/${id}`;
+}
+function editCar(id) {
+    window.location.href = `/cars/${id}/edit`;
+}
+function deleteCar(id) {
+    if (confirm('Bạn có chắc chắn muốn xóa xe này?')) {
+        fetch(`/cars/${id}`, { method: 'DELETE' })
+            .then(() => window.location.reload());
+    }
+}
+</script>

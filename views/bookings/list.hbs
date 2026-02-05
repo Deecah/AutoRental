@@ -1,0 +1,142 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-calendar-check"></i> Danh sách Đặt xe
+                </h4>
+                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addBookingModal">
+                    <i class="bi bi-plus-circle"></i> Tạo đặt xe mới
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Form tìm kiếm -->
+                <form method="GET" action="/bookings" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Người dùng (ID)</label>
+                            <input type="text" class="form-control" name="userId" placeholder="Nhập ID người dùng..." value="{{query.userId}}">
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Bảng danh sách đặt xe -->
+                {{#if bookings}}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Người đặt</th>
+                                <th>Xe</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Tổng chi phí</th>
+                                <th>Trạng thái</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each bookings}}
+                            <tr>
+                                <td>{{inc @index}}</td>
+                                <td>{{#if this.userId}}{{this.userId.name}}<br><small class="text-muted">{{this.userId.email}}</small>{{else}}N/A{{/if}}</td>
+                                <td><strong>{{#if this.carId}}{{this.carId.name}}{{else}}N/A{{/if}}</strong></td>
+                                <td>{{formatDate this.startDate}}</td>
+                                <td>{{formatDate this.endDate}}</td>
+                                <td><strong class="text-primary">{{formatCurrency this.totalCost}} VNĐ</strong></td>
+                                <td>
+                                    {{#if (eq this.status "pending")}}
+                                        <span class="badge bg-warning">Chờ xác nhận</span>
+                                    {{else if (eq this.status "confirmed")}}
+                                        <span class="badge bg-success">Đã xác nhận</span>
+                                    {{else}}
+                                        <span class="badge bg-danger">Đã từ chối</span>
+                                    {{/if}}
+                                </td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewBooking('{{this._id}}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    {{#if (eq this.status "pending")}}
+                                    <button class="btn btn-sm btn-success" onclick="confirmBooking('{{this._id}}')">
+                                        <i class="bi bi-check-circle"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="declineBooking('{{this._id}}')">
+                                        <i class="bi bi-x-circle"></i>
+                                    </button>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+                {{else}}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> Không có đặt xe nào được tìm thấy.
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm đặt xe -->
+<div class="modal fade" id="addBookingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tạo đặt xe mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/bookings">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Người dùng (ID) *</label>
+                        <input type="text" class="form-control" name="userId" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Xe (ID) *</label>
+                        <input type="text" class="form-control" name="carId" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày bắt đầu *</label>
+                        <input type="date" class="form-control" name="startDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Ngày kết thúc *</label>
+                        <input type="date" class="form-control" name="endDate" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo đặt xe</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewBooking(id) {
+    window.location.href = `/bookings/${id}`;
+}
+function confirmBooking(id) {
+    if (confirm('Bạn có chắc chắn muốn xác nhận đặt xe này?')) {
+        fetch(`/bookings/${id}/confirm`, { method: 'PUT' })
+            .then(() => window.location.reload());
+    }
+}
+function declineBooking(id) {
+    if (confirm('Bạn có chắc chắn muốn từ chối đặt xe này?')) {
+        fetch(`/bookings/${id}/decline`, { method: 'PUT' })
+            .then(() => window.location.reload());
+    }
+}
+</script>

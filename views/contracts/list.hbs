@@ -1,0 +1,117 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h4 class="mb-0">
+                    <i class="bi bi-file-earmark-text"></i> Danh sách Hợp đồng
+                </h4>
+                <button class="btn btn-light btn-sm" data-bs-toggle="modal" data-bs-target="#addContractModal">
+                    <i class="bi bi-plus-circle"></i> Tạo hợp đồng mới
+                </button>
+            </div>
+            <div class="card-body">
+                <!-- Form tìm kiếm -->
+                <form method="GET" action="/contracts" class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Trạng thái</label>
+                            <select class="form-select" name="status">
+                                <option value="">Tất cả</option>
+                                <option value="active" {{#if (eq query.status "active")}}selected{{/if}}>Đang hoạt động</option>
+                                <option value="completed" {{#if (eq query.status "completed")}}selected{{/if}}>Hoàn thành</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Tìm kiếm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+
+                <!-- Bảng danh sách hợp đồng -->
+                {{#if contracts}}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>STT</th>
+                                <th>Mã đặt xe</th>
+                                <th>Người đặt</th>
+                                <th>Xe</th>
+                                <th>Ngày bắt đầu</th>
+                                <th>Ngày kết thúc</th>
+                                <th>Tổng chi phí</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#each contracts}}
+                            <tr>
+                                <td>{{inc @index}}</td>
+                                <td><code>{{#if this.bookingId}}{{this.bookingId._id}}{{else}}N/A{{/if}}</code></td>
+                                <td>{{#if this.bookingId.userId}}{{this.bookingId.userId.name}}<br><small class="text-muted">{{this.bookingId.userId.email}}</small>{{else}}N/A{{/if}}</td>
+                                <td><strong>{{#if this.bookingId.carId}}{{this.bookingId.carId.name}}{{else}}N/A{{/if}}</strong></td>
+                                <td>{{#if this.bookingId}}{{formatDate this.bookingId.startDate}}{{else}}N/A{{/if}}</td>
+                                <td>{{#if this.bookingId}}{{formatDate this.bookingId.endDate}}{{else}}N/A{{/if}}</td>
+                                <td><strong class="text-primary">{{formatCurrency this.totalCost}} VNĐ</strong></td>
+                                <td>
+                                    <button class="btn btn-sm btn-info" onclick="viewContract('{{this._id}}')">
+                                        <i class="bi bi-eye"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-primary" onclick="downloadContract('{{this._id}}')">
+                                        <i class="bi bi-download"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {{/each}}
+                        </tbody>
+                    </table>
+                </div>
+                {{else}}
+                <div class="alert alert-info text-center">
+                    <i class="bi bi-info-circle"></i> Không có hợp đồng nào được tìm thấy.
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal thêm hợp đồng -->
+<div class="modal fade" id="addContractModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Tạo hợp đồng mới</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="/contracts">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Mã đặt xe (ID) *</label>
+                        <input type="text" class="form-control" name="bookingId" required>
+                        <small class="form-text text-muted">Nhập ID của đặt xe đã được xác nhận</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Tổng chi phí (VNĐ) *</label>
+                        <input type="number" class="form-control" name="totalCost" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Tạo hợp đồng</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function viewContract(id) {
+    window.location.href = `/contracts/${id}`;
+}
+function downloadContract(id) {
+    window.location.href = `/contracts/${id}/download`;
+}
+</script>

@@ -1,0 +1,98 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-file-earmark-text"></i> Chi tiết Hợp đồng
+                </h4>
+            </div>
+            <div class="card-body">
+                {{#if contract}}
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Thông tin Hợp đồng</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th width="30%">Mã hợp đồng:</th>
+                                        <td><code>{{contract._id}}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Mã đặt xe:</th>
+                                        <td><code>{{contract.bookingId._id}}</code></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Tổng chi phí:</th>
+                                        <td><strong class="text-primary fs-4">{{formatCurrency contract.totalCost}} VNĐ</strong></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header bg-info text-white">
+                                <h5 class="mb-0">Thông tin Đặt xe</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-bordered">
+                                    <tr>
+                                        <th width="30%">Người đặt:</th>
+                                        <td>
+                                            <strong>{{contract.bookingId.userId.name}}</strong><br>
+                                            <small class="text-muted">{{contract.bookingId.userId.email}}</small><br>
+                                            <small class="text-muted">{{contract.bookingId.userId.phone}}</small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>Xe:</th>
+                                        <td><strong>{{contract.bookingId.carId.name}}</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ngày bắt đầu:</th>
+                                        <td>{{formatDate contract.bookingId.startDate}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Ngày kết thúc:</th>
+                                        <td>{{formatDate contract.bookingId.endDate}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Trạng thái đặt xe:</th>
+                                        <td>
+                                            {{#if (eq contract.bookingId.status "confirmed")}}
+                                                <span class="badge bg-success">Đã xác nhận</span>
+                                            {{else}}
+                                                <span class="badge bg-warning">{{contract.bookingId.status}}</span>
+                                            {{/if}}
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="/contracts" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                    <button class="btn btn-primary" onclick="downloadContract('{{contract._id}}')">
+                        <i class="bi bi-download"></i> Tải xuống
+                    </button>
+                </div>
+                {{else}}
+                <div class="alert alert-danger">
+                    Không tìm thấy thông tin hợp đồng.
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function downloadContract(id) {
+    window.location.href = `/contracts/${id}/download`;
+}
+</script>

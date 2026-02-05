@@ -1,0 +1,55 @@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0">
+                    <i class="bi bi-car-front"></i> Chi tiết Xe
+                </h4>
+            </div>
+            <div class="card-body">
+                {{#if car}}
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th width="40%">Tên xe:</th>
+                                <td><strong>{{car.name}}</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Chủ sở hữu:</th>
+                                <td>{{car.ownerId.name}} ({{car.ownerId.email}})</td>
+                            </tr>
+                            <tr>
+                                <th>Trạng thái:</th>
+                                <td>
+                                    {{#if (eq car.status "available")}}
+                                        <span class="badge bg-success">Có sẵn</span>
+                                    {{else}}
+                                        <span class="badge bg-danger">Đã đặt</span>
+                                    {{/if}}
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Giá/ngày:</th>
+                                <td><strong class="text-primary">{{formatCurrency car.pricePerDay}} VNĐ</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <a href="/cars" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Quay lại
+                    </a>
+                    <a href="/cars/{{car._id}}/edit" class="btn btn-warning">
+                        <i class="bi bi-pencil"></i> Chỉnh sửa
+                    </a>
+                </div>
+                {{else}}
+                <div class="alert alert-danger">
+                    Không tìm thấy thông tin xe.
+                </div>
+                {{/if}}
+            </div>
+        </div>
+    </div>
+</div>
